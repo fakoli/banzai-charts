@@ -1,0 +1,82 @@
+################################
+## Airflow Prometheus StatefulSet
+#################################
+kind: StatefulSet
+apiVersion: apps/v1beta2
+metadata:
+  name: {{ .Release.Name }}-prometheus
+  labels:
+    tier: airflow-monitoring
+    component: prometheus
+    release: {{ .Release.Name }}
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    heritage: {{ .Release.Service }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      tier: airflow-monitoring
+      component: prometheus
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        tier: airflow-monitoring
+        component: prometheus
+        release: {{ .Release.Name }}
+      annotations:
+        checksum/configmap: {{ include (print $.Template.BasePath "/prometheus/prometheus-configmap.yaml") . | sha256sum }}
+    spec:
+      restartPolicy: Always
+      serviceAccountName: {{ .Release.Name }}-prometheus
+      securityContext:
+        runAsUser: 2000
+        fsGroup: 1000
+      containers:
+        - name: {{ .Release.Name }}-prometheus
+          image: {{ .Values.images.prometheus }}
+          args:
+            - "--config.file=/etc/prometheus/config/kubernetes.yaml"
+            - "--storage.tsdb.path={{ .Values.prometheus.dataDir }}"
+          volumeMounts:
+            - name: prometheus-config-volume
+              mountPath: /etc/prometheus/config
+          {{- if .Values.prometheus.persistence.enabled }}
+            - name: prometheus-data-volume
+              mountPath: "{{ .Values.prometheus.dataDir }}"
+          {{- end }}
+          ports:
+            - name: prometheus-data
+              containerPort: 9090
+          livenessProbe:
+            httpGet:
+              path: /graph
+              port: 9090
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /graph
+              port: 9090
+            initialDelaySeconds: 10
+            periodSeconds: 10
+      volumes:
+        - name: prometheus-config-volume
+          configMap:
+            name: {{ .Release.Name }}-prometheus
+            items:
+              - key: kubernetes.yaml
+                path: kubernetes.yaml
+  {{- if not .Values.prometheus.persistence.enabled }}
+        - name: prometheus-data-volume
+          emptyDir: {}
+  {{- else }}
+  volumeClaimTemplates:
+    - metadata:
+        name: prometheus-data-volume
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        resources:
+          requests:
+            storage: {{ .Values.prometheus.persistence.size }}
+  {{- end }}

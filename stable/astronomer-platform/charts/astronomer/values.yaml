@@ -1,0 +1,23 @@
+# Default values for astronomer.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# User in pilot containers
+uid: 100
+
+# Images for pilot
+images:
+  commander: astronomerinc/ap-commander:0.2.0
+  registry: astronomerinc/ap-registry:0.2.0
+  houston: astronomerinc/ap-houston-api:0.2.0
+
+# Astronomer platform config
+data:
+  houstonDatabaseSecret: "houston-database"
+  airflowDatabaseSecret: "houston-database"
+  airflowRedisSecret: "airflow-redis"
+
+# Enable persistence to keep registry data between deploys
+persistence:
+  enabled: true
+  size: 50Gi

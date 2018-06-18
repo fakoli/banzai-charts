@@ -1,0 +1,76 @@
+#################################
+## Astronomer global configuration
+#################################
+global:
+  # Base domain for all subdomains exposed through ingress
+  baseDomain:
+
+  # Use kube-lego
+  acme: false
+
+  # If RBAC on cluster is enabled
+  rbacEnabled: true
+
+  # Name of secret containing TLS certificate
+  tlsSecret:
+
+  # Name of secret containing basic auth for NGINX
+  nginxAuthSecret: "nginx-auth"
+
+  # Name of secret containing docker registry auth
+  registryAuthSecret: "registry-auth"
+
+  # URL to the Astronomer helm repo
+  helmRepo: "https://helm.astronomer.io"
+
+  # Host and port of where tiller is running in Kubernetes
+  helmHost: "tiller-deploy.kube-system.svc.cluster.local:44134"
+
+  # Namespace Tiller is installed on
+  tillerNamespace: "kube-system"
+
+  # Astronomer modules
+  modules:
+
+    # Enable astronomer module
+    astronomer:
+      enabled: true
+
+    # Enable airflow module
+    airflow:
+      enabled: false
+
+    # Enable NGINX ingress module
+    nginx:
+      enabled: true
+
+#################################
+## Nginx configuration
+#################################
+nginx:
+  # IP address the nginx ingress should bind to
+  loadBalancerIP:
+
+  # Used to restrict IPs which can reach the nginx ingress
+  loadBalancerSourceRanges:
+
+#################################
+## Airflow configuration
+#################################
+airflow:
+  # Worker settings
+  workers:
+    # Enable persistence to keep logs around between deploys
+    persistence:
+      enabled: true
+      # If using a custom storageClass, pass name ref to all statefulSets here
+      storageClassName:
+
+#################################
+## Astronomer configuration
+#################################
+astronomer:
+  # Enable persistence to keep registry data between deploys
+  persistence:
+    enabled: true
+    size: 50Gi

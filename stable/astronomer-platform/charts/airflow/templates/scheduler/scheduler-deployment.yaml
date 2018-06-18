@@ -1,0 +1,45 @@
+################################
+## Airflow Scheduler Deployment
+#################################
+kind: Deployment
+apiVersion: apps/v1beta2
+metadata:
+  name: {{ .Release.Name }}-scheduler
+  labels:
+    tier: airflow
+    component: scheduler
+    release: {{ .Release.Name }}
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    heritage: {{ .Release.Service }}
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+  selector:
+    matchLabels:
+      tier: airflow
+      component: scheduler
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        tier: airflow
+        component: scheduler
+        release: {{ .Release.Name }}
+    spec:
+      restartPolicy: Always
+      securityContext:
+        runAsUser: {{ .Values.uid }}
+      {{- if .Values.global.registryAuthSecret }}
+      imagePullSecrets:
+        - name: {{ .Values.global.registryAuthSecret }}
+      {{- end }}
+      containers:
+        - name: {{ .Release.Name }}-scheduler
+          image: {{ .Values.images.airflow }}
+          args: ["airflow", "scheduler"]
+          env:
+          {{- include "airflow_environment" . | indent 10 }}

@@ -1,0 +1,75 @@
+################################
+## Astronomer Registry StatefulSet
+#################################
+kind: StatefulSet
+apiVersion: apps/v1beta2
+metadata:
+  name: {{ .Release.Name }}-registry
+  labels:
+    component: registry
+    tier: astronomer
+    release: {{ .Release.Name }}
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    heritage: {{ .Release.Service }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      component: registry
+      tier: astronomer
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        component: registry
+        tier: astronomer
+        release: {{ .Release.Name }}
+      annotations:
+        checksum/configmap: {{ include (print $.Template.BasePath "/registry/registry-configmap.yaml") . | sha256sum }}
+    spec:
+      restartPolicy: Always
+      containers:
+        - name: {{ .Release.Name }}-registry
+          image: {{ .Values.images.registry }}
+          volumeMounts:
+            - name: registry-config-volume
+              mountPath: /etc/docker/registry
+            {{- if .Values.persistence.enabled }}
+            - name: registry-data-volume
+              mountPath: /var/lib/registry
+            {{- end }}
+          ports:
+            - name: registry-http
+              containerPort: 5000
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 5000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 5000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+      volumes:
+        - name: registry-config-volume
+          configMap:
+            name: {{ .Release.Name }}-registry
+            items:
+              - key: config.yml
+                path: config.yml
+  {{- if not .Values.persistence.enabled }}
+        - name: registry-data-volume
+          emptyDir: {}
+  {{- else }}
+  volumeClaimTemplates:
+    - metadata:
+        name: registry-data-volume
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: {{ .Values.persistence.size }}
+  {{- end }}

@@ -1,0 +1,25 @@
+# Default values for nginx.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+images:
+  nginxIngress: astronomerinc/ap-nginx:0.2.0
+  defaultBackend: astronomerinc/ap-default-backend:0.2.0
+
+# IP address the nginx ingress should bind to
+loadBalancerIP:
+
+# Used to restrict IPs which can reach the nginx ingress
+loadBalancerSourceRanges:
+
+## Dependent on cloud provider
+preserveSourceIP: false
+
+proxyConnectTimeout: 15
+proxyReadTimeout: 600
+proxySendTimeout: 600
+proxyBodySize: "512m"
+hstsIncludeSubdomains: false
+serverNameHashBucketSize: 256
+# Restrict nginx to only watching for ingress on the helm release namespace
+watchReleaseNamespace: true
+forceNamespaceIsolation: true

@@ -1,0 +1,37 @@
+################################
+## NGINX Service
+#################################
+kind: Service
+apiVersion: v1
+metadata:
+  name: {{ .Release.Name }}-nginx
+  labels:
+    tier: nginx
+    component: ingress-controller
+    release: {{ .Release.Name }}
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    heritage: {{ .Release.Service }}
+spec:
+  type: LoadBalancer
+  {{- if .Values.loadBalancerIP }}
+  loadBalancerIP: {{ .Values.loadBalancerIP }}
+  {{- end }}
+  {{- if .Values.loadBalancerSourceRanges }}
+  loadBalancerSourceRanges: {{ .Values.loadBalancerSourceRanges }}
+  {{- end }}
+  {{- if .Values.preserveSourceIP }}
+  externalTrafficPolicy: "Cluster"
+  {{- end }}
+  selector:
+    tier: nginx
+    component: ingress-controller
+    release: {{ .Release.Name }}
+  ports:
+    - port: 80
+      targetPort: 80
+      protocol: TCP
+      name: http
+    - port: 443
+      targetPort: 443
+      protocol: TCP
+      name: https

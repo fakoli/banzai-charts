@@ -1,0 +1,56 @@
+################################
+## Airflow Grafana Deployment
+#################################
+kind: Deployment
+apiVersion: apps/v1beta2
+metadata:
+  name: {{ .Release.Name }}-grafana
+  labels:
+    tier: airflow-monitoring
+    component: grafana
+    release: {{ .Release.Name }}
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    heritage: {{ .Release.Service }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      tier: airflow-monitoring
+      component: grafana
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        tier: airflow-monitoring
+        component: grafana
+        release: {{ .Release.Name }}
+    spec:
+      restartPolicy: Always
+      containers:
+        - name: {{ .Release.Name }}-grafana
+          image: {{ .Values.images.grafana }}
+          ports:
+            - name: grafana-ui
+              containerPort: 3000
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          env:
+            - name: GF_DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.data.grafanaBackendSecret }}
+                  key: connection
+            - name: GF_AUTH_ANONYMOUS_ENABLED
+              value: "true"
+            - name: ASTRO_DEFAULT_PROMETHEUS_HOST
+              value: "http://{{ .Release.Name }}-prometheus:9090"

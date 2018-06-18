@@ -1,0 +1,24 @@
+################################
+## Airflow Prometheus Service
+#################################
+kind: Service
+apiVersion: v1
+metadata:
+  name: {{ .Release.Name }}-prometheus
+  labels:
+    tier: airflow-monitoring
+    component: prometheus
+    release: {{ .Release.Name }}
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    heritage: {{ .Release.Service }}
+spec:
+  type: NodePort
+  selector:
+    tier: airflow-monitoring
+    component: prometheus
+    release: {{ .Release.Name }}
+  ports:
+    - name: prometheus-data
+      protocol: TCP
+      port: 9090
+      targetPort: 9090

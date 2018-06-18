@@ -1,0 +1,28 @@
+################################
+## Astronomer Commander Service
+#################################
+kind: Service
+apiVersion: v1
+metadata:
+  name: {{ .Release.Name }}-commander
+  labels:
+    component: commander
+    tier: astronomer
+    release: {{ .Release.Name }}
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    heritage: {{ .Release.Service }}
+spec:
+  type: NodePort
+  selector:
+    component: commander
+    tier: astronomer
+    release: {{ .Release.Name }}
+  ports:
+    - name: commander-http
+      protocol: TCP
+      port: 8880
+      targetPort: 8880
+    - name: commander-grpc
+      protocol: TCP
+      port: 50051
+      targetPort: 50051
