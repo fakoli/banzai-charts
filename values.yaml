@@ -1,0 +1,9 @@
+{
+    "statefullset": {
+       "annotations": {
+           "autoscale/minReplicas": "3",
+           "autoscale/maxReplicas": "8",
+           "autoscale/cpu": "60"
+       }
+    }
+}
